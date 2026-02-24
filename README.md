@@ -15,7 +15,7 @@ Most agent setups improve only when humans manually intervene. AgentDojo creates
 
 ## Core Principles
 
-1. **Quality > Cost > Safety** as optimization priority
+1. **Safety > Quality > Cost** as optimization priority
 2. **Safety is mandatory** and never disabled
 3. **Small daily gains** beat occasional large experiments
 4. **Auditability by default** for every run
