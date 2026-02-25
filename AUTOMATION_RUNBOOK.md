@@ -1,29 +1,62 @@
-# SortPilot Autopilot Runbook (No-Manual Flow)
+# Automation Runbook: Auto-PR + Auto-Merge
 
-## Goal
-One command to run an automated visual smoke test and produce screenshots for all main app sections.
+## Ziel
+Automatisierter Flow für `feat/*` Branches:
+1. Push auf `feat/*` erstellt automatisch einen PR nach `main`.
+2. CI läuft verpflichtend (`build-and-test`).
+3. PRs mit Label `automerge` werden auf Auto-Merge gestellt.
+4. Merge erfolgt automatisch, sobald Required Checks grün sind.
 
-## What is implemented now
-- Script: `C:\oc_projects\SortPilot\scripts\run-visual-smoke.ps1`
-- Driver: `C:\oc_projects\SortPilot\scripts\visual-smoke.cjs`
-- Output: `C:\oc_projects\SortPilot\artifacts\screens\*.png` + `summary.txt`
+## Bereits im Repo eingerichtet
+- `.github/workflows/ci.yml`
+- `.github/workflows/feature-pr-auto-open.yml`
+- `.github/workflows/enable-automerge.yml`
 
-Covered pages:
-- Dashboard
-- Inbox
-- Locations
-- Rules
-- Smart Folders
-- Info & Legal
-- Settings
+## Einmalig im GitHub-Repo konfigurieren (CLI)
 
-## Run
-```powershell
-cd C:\oc_projects\SortPilot
-powershell -ExecutionPolicy Bypass -File scripts/run-visual-smoke.ps1
+> Voraussetzung: `gh auth login` mit Admin-Rechten auf das Repository.
+
+```bash
+# 1) Auto-merge Feature im Repo aktivieren
+gh repo edit Musashi94/AgentDojo --enable-auto-merge
+
+# 2) Branch protection für main mit required status checks
+# Hinweis: Erwarteter Check-Name ist exakt: "build-and-test"
+gh api \
+  -X PUT \
+  -H "Accept: application/vnd.github+json" \
+  repos/Musashi94/AgentDojo/branches/main/protection \
+  -f required_status_checks.strict=true \
+  -f enforce_admins=true \
+  -f required_pull_request_reviews.dismiss_stale_reviews=true \
+  -f required_pull_request_reviews.required_approving_review_count=1 \
+  -f restrictions= \
+  -F required_status_checks.contexts[]="build-and-test"
 ```
 
-## Notes
-- This is browser-level visual validation (fast, repeatable).
-- Full native Tauri action testing (with `invoke` bridge behavior) still needs direct Tauri-window automation channel.
-- Use this smoke run as the default proactive status heartbeat artifact for every test cycle.
+## Optional: Merge Queue (wenn Plan/Org unterstützt)
+
+```bash
+gh api \
+  -X PATCH \
+  -H "Accept: application/vnd.github+json" \
+  repos/Musashi94/AgentDojo \
+  -f allow_auto_merge=true \
+  -f allow_merge_commit=false \
+  -f allow_squash_merge=true
+```
+
+Danach in den Repository Settings UI:
+- `Branch protection rule` für `main`
+- Option `Require merge queue` aktivieren (falls verfügbar)
+
+## Empfohlenes Team-Handling
+- Entwickler arbeiten auf `feat/<ticket>-<kurzname>`.
+- Für Auto-Merge Label `automerge` setzen.
+- Ohne Label bleibt PR normal manuell mergebar.
+
+## Risiken / Hinweise
+- Workflow `enable-automerge` benötigt, dass GitHub Auto-Merge im Repo erlaubt ist.
+- Wenn Required Check-Name sich ändert, Branch Protection muss angepasst werden.
+- Bei Fork-PRs können Token-Rechte eingeschränkt sein; Flow ist primär für interne Branches.
+- Review-Pflicht (1 Approver) kann Auto-Merge blocken, bis Review vorliegt.
