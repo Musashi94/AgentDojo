@@ -1,0 +1,97 @@
+version: 1
+profile: balanced
+
+learning_profiles:
+  lowcost:
+    frequency: weekly
+    time_local: "03:30"
+    timezone: "Europe/Berlin"
+    depth: light
+    token_budget_per_run: 4000
+    max_runs_per_day: 1
+    max_runtime_minutes: 10
+    mode: propose_only
+  balanced:
+    frequency: daily
+    time_local: "03:00"
+    timezone: "Europe/Berlin"
+    depth: normal
+    token_budget_per_run: 12000
+    max_runs_per_day: 1
+    max_runtime_minutes: 25
+    mode: propose_only
+  intensive:
+    frequency: daily
+    time_local: "02:30"
+    timezone: "Europe/Berlin"
+    depth: deep
+    token_budget_per_run: 30000
+    max_runs_per_day: 1
+    max_runtime_minutes: 45
+    mode: auto_apply_reviewed
+
+learning:
+  enabled: true
+  inherit_profile: true
+  # Optional override if frequency=cron
+  cron: null
+  sources:
+    - memory
+    - repo
+    - failures
+    - docs
+    - clawhub
+  quiet_hours:
+    enabled: true
+    from: "23:00"
+    to: "07:00"
+  safety:
+    require_human_review_for_skill_install: true
+    require_human_review_for_guardrail_changes: true
+    rollback_on_failed_validation: true
+
+proactive:
+  enabled: true
+  default_channel: discord
+  default_target: warroom-main
+  cooldown_seconds: 900
+  dedupe_window_seconds: 1800
+  routes:
+    - event: learning_run_completed
+      channel: discord
+      target: warroom-main
+      severity: info
+      template: "[Dojo] Learning run complete: profile={{profile}}, tokens={{tokens_used}}, findings={{findings_count}}"
+    - event: learning_run_blocked
+      channel: discord
+      target: warroom-main
+      severity: warn
+      template: "[Dojo] Learning blocked: {{reason}}"
+    - event: skill_suggestion_created
+      channel: discord
+      target: warroom-main
+      severity: info
+      template: "[Dojo] New skill suggestion: {{skill_name}} (review required)"
+
+agents:
+  aliases:
+    leadarchitect:
+      - leadarchitect
+      - lead_architect
+      - orchestrator
+    devops:
+      - devops
+      - platform
+    qa:
+      - qa
+      - quality
+providers:
+  aliases:
+    openai-codex:
+      - openai-codex
+      - codex
+    anthropic:
+      - anthropic
+      - claude
+    openrouter:
+      - openrouter
