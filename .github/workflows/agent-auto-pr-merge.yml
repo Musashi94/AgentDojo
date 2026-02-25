@@ -1,0 +1,56 @@
+name: agent-auto-pr-merge
+
+on:
+  push:
+    branches:
+      - 'agent/**'
+      - 'agents/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create_pr_and_enable_automerge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure PR exists for agent branch
+        uses: actions/github-script@v7
+        id: pr
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const head = context.ref.replace('refs/heads/', '');
+            const base = 'main';
+
+            const existing = await github.rest.pulls.list({
+              owner, repo, state: 'open', head: `${owner}:${head}`, base
+            });
+
+            if (existing.data.length > 0) {
+              core.setOutput('number', existing.data[0].number.toString());
+              core.info(`Using existing PR #${existing.data[0].number}`);
+              return;
+            }
+
+            const created = await github.rest.pulls.create({
+              owner,
+              repo,
+              title: `agent: merge ${head} into main`,
+              head,
+              base,
+              body: 'Automatisch durch Agent-Workflow erstellt. Auto-Merge wird bei grünen Checks aktiviert.'
+            });
+
+            core.setOutput('number', created.data.number.toString());
+            core.info(`Created PR #${created.data.number}`);
+
+      - name: Enable auto-merge (squash)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge ${{ steps.pr.outputs.number }} --auto --squash --delete-branch

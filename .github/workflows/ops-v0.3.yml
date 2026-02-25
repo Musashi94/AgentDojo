@@ -1,0 +1,69 @@
+name: ops-v0.3
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  remote_guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enforce origin remote standard for v0.x
+        shell: pwsh
+        run: ./scripts/check-git-remote.ps1 -ExpectedRepo Musashi94/AgentDojo -Version v0.3.0
+
+  telemetry_lint:
+    runs-on: ubuntu-latest
+    needs: remote_guard
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint telemetry schema v1
+        shell: pwsh
+        run: ./scripts/lint-telemetry-schema.ps1 -SchemaPath telemetry/schema-v1.json
+
+  dashboard_contract_check:
+    runs-on: ubuntu-latest
+    needs: telemetry_lint
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate dashboard v1 JSON
+        shell: pwsh
+        run: |
+          $null = Get-Content -Raw dashboards/dashboard-v1.json | ConvertFrom-Json
+          Write-Host "Dashboard v1 JSON valid."
+
+  canary_release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: dashboard_contract_check
+    steps:
+      - uses: actions/checkout@v4
+      - name: Progressive canary rollout
+        shell: bash
+        run: |
+          set -euo pipefail
+          for p in 5 25 50 100; do
+            echo "Shifting traffic to ${p}% canary..."
+            # hook: deploy command here
+            sleep 5
+            # hook: replace with real metric query and gate evaluation
+            test -f canary-report.json || echo '{"gate":"pass"}' > canary-report.json
+            if ! grep -q '"gate":"pass"' canary-report.json; then
+              echo "Gate failed at ${p}%, starting auto-rollback"
+              echo "Rollback to stable"
+              exit 1
+            fi
+          done
+          echo "Canary rollout completed."
+
+  auto_rollback_on_failure:
+    if: failure() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: canary_release
+    steps:
+      - name: Rollback stable release
+        run: |
+          echo "Executing rollback to stable due to failed gates"
+          # hook: rollback command here

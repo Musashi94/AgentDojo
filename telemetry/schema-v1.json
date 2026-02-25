@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.local/telemetry/schema-v1.json",
+  "title": "Telemetry Event v1",
+  "type": "object",
+  "required": [
+    "event_name",
+    "event_type",
+    "timestamp",
+    "service",
+    "version",
+    "environment",
+    "region",
+    "release_id",
+    "trace_id",
+    "status"
+  ],
+  "properties": {
+    "event_name": { "type": "string", "minLength": 3 },
+    "event_type": {
+      "type": "string",
+      "enum": ["release", "deployment", "error", "latency", "quality", "cost", "rollback"]
+    },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "service": { "type": "string", "minLength": 2 },
+    "version": { "type": "string", "pattern": "^[vV]?\\d+\\.\\d+\\.\\d+(-[A-Za-z0-9.-]+)?$" },
+    "environment": { "type": "string", "enum": ["dev", "staging", "prod"] },
+    "region": { "type": "string", "minLength": 2 },
+    "release_id": { "type": "string", "minLength": 6 },
+    "trace_id": { "type": "string", "minLength": 8 },
+    "status": { "type": "string", "enum": ["ok", "warn", "error"] },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "latency_p95_ms": { "type": "number", "minimum": 0 },
+        "error_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "availability": { "type": "number", "minimum": 0, "maximum": 1 },
+        "change_failure_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "defect_escape_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "cost_eur": { "type": "number", "minimum": 0 },
+        "cost_delta_pct": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "tags": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}
