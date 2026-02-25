@@ -1,0 +1,28 @@
+version: v1
+service_defaults:
+  steps:
+    - traffic_percent: 5
+      hold_minutes: 10
+    - traffic_percent: 25
+      hold_minutes: 15
+    - traffic_percent: 50
+      hold_minutes: 20
+    - traffic_percent: 100
+      hold_minutes: 0
+  gates:
+    reliability:
+      availability_min: 0.995
+      latency_p95_ms_max: 350
+      error_rate_max: 0.02
+    quality:
+      change_failure_rate_max: 0.15
+      defect_escape_rate_max: 0.03
+    cost:
+      cost_delta_pct_max: 12
+  auto_rollback:
+    enabled: true
+    triggers:
+      - gate_violation
+      - error_spike
+      - anomaly_cost
+    rollback_target: stable

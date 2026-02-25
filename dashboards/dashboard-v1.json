@@ -1,0 +1,36 @@
+{
+  "dashboard": "ops-v0.3",
+  "version": 1,
+  "sections": [
+    {
+      "name": "Reliability",
+      "widgets": [
+        "availability_sli",
+        "latency_p95_ms",
+        "error_rate",
+        "error_budget_burn",
+        "mttr"
+      ]
+    },
+    {
+      "name": "Quality",
+      "widgets": [
+        "change_failure_rate",
+        "defect_escape_rate",
+        "test_pass_rate",
+        "rollback_count"
+      ]
+    },
+    {
+      "name": "Cost",
+      "widgets": [
+        "cost_per_release_eur",
+        "cost_per_service_eur",
+        "canary_vs_stable_delta_pct",
+        "daily_cost_trend"
+      ]
+    }
+  ],
+  "filters": ["service", "environment", "region", "version", "release_id"],
+  "refresh_seconds": 30
+}
