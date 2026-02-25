@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentdojo.local/dojo.schema.json",
+  "title": "AgentDojo Config",
+  "type": "object",
+  "required": ["version", "profile", "learning_profiles", "learning"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "profile": { "type": "string" },
+    "learning_profiles": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/learningProfile" }
+    },
+    "learning": {
+      "type": "object",
+      "required": ["enabled", "inherit_profile", "sources", "safety"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "inherit_profile": { "type": "boolean" },
+        "cron": { "type": ["string", "null"] },
+        "sources": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "quiet_hours": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "from": { "type": "string" },
+            "to": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "safety": {
+          "type": "object",
+          "properties": {
+            "require_human_review_for_skill_install": { "type": "boolean" },
+            "require_human_review_for_guardrail_changes": { "type": "boolean" },
+            "rollback_on_failed_validation": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": true
+    },
+    "proactive": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "default_channel": { "type": "string" },
+        "default_target": { "type": "string" },
+        "cooldown_seconds": { "type": "integer", "minimum": 0 },
+        "dedupe_window_seconds": { "type": "integer", "minimum": 0 },
+        "routes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/proactiveRoute" }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "learningProfile": {
+      "type": "object",
+      "required": [
+        "frequency",
+        "time_local",
+        "timezone",
+        "depth",
+        "token_budget_per_run",
+        "max_runs_per_day",
+        "max_runtime_minutes",
+        "mode"
+      ],
+      "properties": {
+        "frequency": { "enum": ["daily", "weekly", "cron"] },
+        "time_local": { "type": "string" },
+        "timezone": { "type": "string" },
+        "depth": { "enum": ["light", "normal", "deep"] },
+        "token_budget_per_run": { "type": "integer", "minimum": 1 },
+        "max_runs_per_day": { "type": "integer", "minimum": 1 },
+        "max_runtime_minutes": { "type": "integer", "minimum": 1 },
+        "mode": { "enum": ["propose_only", "auto_apply_reviewed"] }
+      },
+      "additionalProperties": false
+    },
+    "proactiveRoute": {
+      "type": "object",
+      "required": ["event", "channel", "target", "severity", "template"],
+      "properties": {
+        "event": { "type": "string" },
+        "channel": { "type": "string" },
+        "target": { "type": "string" },
+        "severity": { "enum": ["info", "warn", "critical"] },
+        "template": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}
