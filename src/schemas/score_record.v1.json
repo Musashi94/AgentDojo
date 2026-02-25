@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ScoreRecord v1",
+  "type": "object",
+  "required": ["run_id", "score"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "score": { "type": "number", "minimum": 0, "maximum": 100 }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RunRecord v1",
+  "type": "object",
+  "required": ["run_id", "role", "prompt", "state", "started_at", "runtime_seconds"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "role": { "type": "string" },
+    "prompt": { "type": "string" },
+    "drill_id": { "type": ["string", "null"] },
+    "state": {
+      "type": "string",
+      "enum": ["created", "preflight_passed", "drill_selected", "executed", "scored", "persisted", "reported", "quarantined", "failed"]
+    },
+    "started_at": { "type": "string" },
+    "ended_at": { "type": ["string", "null"] },
+    "runtime_seconds": { "type": "integer", "minimum": 0 },
+    "score": { "type": ["number", "null"] },
+    "quarantine_reason": { "type": ["string", "null"] },
+    "artifacts": { "type": "object" },
+    "events": { "type": "array" }
+  }
+}
